@@ -71,16 +71,14 @@ func Connect() error {
 	}
 	return nil
 }
-// func helloWorld(c *fiber.Ctx) {
-// 	c.SendString("Hello World")
-// }
+func helloWorld(c *fiber.Ctx) error {
+	return c.SendString("Hello World")
+}
 
-//============================Routes====================================
+//============================Setup Routes====================================
 func setupRoutes(app *fiber.App) {
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
-	// app.Get("/", helloWorld)
+	api := app.Group("/api")
+	api.Get("/", helloWorld)
 }
 
 //============================MAIN====================================
@@ -97,15 +95,15 @@ func main() {
 	}
 
 	app := fiber.New()
-
-
 	app.Use(cors.New())
+
 	setupRoutes(app)
+	// 404 Handler
+	app.Use(func(c *fiber.Ctx) error {
+	   return c.SendStatus(404) // => 404 "Not Found"
+   })
 	// app.Use(logger.New())
 
-	// app.Get("/", func(c *fiber.Ctx) error {
-	// 	return c.SendString("Hello, World!")
-	// })
 	// app.Get("/blog", func(c *fiber.Ctx) error {
 	// 	// Insert blog into database
 	// 	rows, err := db.Query("SELECT id, author, title, description FROM blogs order by id")
