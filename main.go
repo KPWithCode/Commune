@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -14,24 +15,25 @@ import (
 //============================MODELS====================================
 
 // User struct
-type User struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
+// type User struct {
+// 	ID       string `json:"id"`
+// 	Username string `json:"username"`
+// 	Email    string `json:"email"`
+// 	Password string `json:"password"`
+// }
 
-// Users struct
-type Users struct {
-	Users []User `json:"users"`
-}
+// // Users struct
+// type Users struct {
+// 	Users []User `json:"users"`
+// }
 
 // Blog Struct
 type Blog struct {
-	ID          string  `json:"id"`
-	Author      *Author `json:"author"`
-	Title       string  `json:"title"`
-	Description string  `json:"description"`
+	ID string `json:"id"`
+	// Author      *Author `json:"author"`
+	Author      string `json:"author"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 // Blogs struct
@@ -40,11 +42,11 @@ type Blogs struct {
 }
 
 // Author struct
-type Author struct {
-	Username  string `json:"username"`
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
-}
+// type Author struct {
+// 	Username  string `json:"username"`
+// 	Firstname string `json:"firstname"`
+// 	Lastname  string `json:"lastname"`
+// }
 
 //============================DATABASE====================================
 // Database instance
@@ -69,6 +71,17 @@ func Connect() error {
 	}
 	return nil
 }
+// func helloWorld(c *fiber.Ctx) {
+// 	c.SendString("Hello World")
+// }
+
+//============================Routes====================================
+func setupRoutes(app *fiber.App) {
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Hello, World!")
+	})
+	// app.Get("/", helloWorld)
+}
 
 //============================MAIN====================================
 
@@ -83,16 +96,19 @@ func main() {
 		log.Fatal("Cant connect...", err)
 	}
 
-
 	app := fiber.New()
+
+
+	app.Use(cors.New())
+	setupRoutes(app)
 	// app.Use(logger.New())
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
+	// app.Get("/", func(c *fiber.Ctx) error {
+	// 	return c.SendString("Hello, World!")
+	// })
 	// app.Get("/blog", func(c *fiber.Ctx) error {
 	// 	// Insert blog into database
-	// 	rows, err := db.Query("SELECT id, author, title, description FROM Blogs order by id")
+	// 	rows, err := db.Query("SELECT id, author, title, description FROM blogs order by id")
 	// 	if err != nil {
 	// 		return c.Status(500).SendString(err.Error())
 	// 	}
@@ -111,8 +127,7 @@ func main() {
 	// 	// Return Employees in JSON format
 	// 	return c.JSON(result)
 	// })
-
-	// // Add record into postgreSQL
+	// Add record into postgreSQL
 	// app.Post("/blog", func(c *fiber.Ctx) error {
 	// 	// New Employee struct
 	// 	u := new(Blog)
@@ -122,64 +137,59 @@ func main() {
 	// 		return c.Status(400).SendString(err.Error())
 	// 	}
 
-	// 	// Insert Employee into database
-	// 	res, err := db.Query("INSERT INTO blogs (author, title, description)VALUES (KP, HI, WELCOME)", u.Author, u.Title, u.Description)
+	// 	// Insert Blogs into database
+	// 	res, err := db.Query("INSERT INTO blogs (author, title, description) VALUES (KP, HI, WELCOME)", u.Author, u.Title, u.Description)
 	// 	if err != nil {
 	// 		return err
 	// 	}
-
-	// 	// Print result
 	// 	log.Println(res)
-
-	// 	// Return Employee in JSON format
 	// 	return c.JSON(u)
 	// })
-
-	// Update record into postgreSQL
-	// app.Put("/employee", func(c *fiber.Ctx) error {
-	// 	// New Employee struct
-	// 	u := new(Employee)
-
-	// 	// Parse body into struct
-	// 	if err := c.BodyParser(u); err != nil {
-	// 		return c.Status(400).SendString(err.Error())
-	// 	}
-
-	// 	// Insert Employee into database
-	// 	res, err := db.Query("UPDATE employees SET name=$1,salary=$2,age=$3 WHERE id=$5", u.Name, u.Salary, u.Age, u.ID)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	// Print result
-	// 	log.Println(res)
-
-	// 	// Return Employee in JSON format
-	// 	return c.Status(201).JSON(u)
-	// })
-
-	// Delete record from postgreSQL
-	// app.Delete("/employee", func(c *fiber.Ctx) error {
-	// 	// New Employee struct
-	// 	u := new(Employee)
-
-	// 	// Parse body into struct
-	// 	if err := c.BodyParser(u); err != nil {
-	// 		return c.Status(400).SendString(err.Error())
-	// 	}
-
-	// 	// Insert Employee into database
-	// 	res, err := db.Query("DELETE FROM employees WHERE id = $1", u.ID)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	// Print result
-	// 	log.Println(res)
-
-	// 	// Return Employee in JSON format
-	// 	return c.JSON("Deleted")
-	// })
-
 	log.Fatal(app.Listen(":5000"))
 }
+
+// Update record into postgreSQL
+// app.Put("/employee", func(c *fiber.Ctx) error {
+// 	// New Employee struct
+// 	u := new(Employee)
+
+// 	// Parse body into struct
+// 	if err := c.BodyParser(u); err != nil {
+// 		return c.Status(400).SendString(err.Error())
+// 	}
+
+// 	// Insert Employee into database
+// 	res, err := db.Query("UPDATE employees SET name=$1,salary=$2,age=$3 WHERE id=$5", u.Name, u.Salary, u.Age, u.ID)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// Print result
+// 	log.Println(res)
+
+// 	// Return Employee in JSON format
+// 	return c.Status(201).JSON(u)
+// })
+
+// Delete record from postgreSQL
+// app.Delete("/employee", func(c *fiber.Ctx) error {
+// 	// New Employee struct
+// 	u := new(Employee)
+
+// 	// Parse body into struct
+// 	if err := c.BodyParser(u); err != nil {
+// 		return c.Status(400).SendString(err.Error())
+// 	}
+
+// 	// Insert Employee into database
+// 	res, err := db.Query("DELETE FROM employees WHERE id = $1", u.ID)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// Print result
+// 	log.Println(res)
+
+// 	// Return Employee in JSON format
+// 	return c.JSON("Deleted")
+// })
