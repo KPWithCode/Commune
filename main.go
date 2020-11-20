@@ -1,56 +1,25 @@
 package main
 
 import (
-	"database/sql"
+	// "database/sql"
 	"fmt"
 	"log"
 	"os"
-
+	"github.com/KPWithCode/Commune/routes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
 	_ "github.com/lib/pq"
 )
 
-//============================MODELS====================================
-
-// User struct
-// type User struct {
-// 	ID       string `json:"id"`
-// 	Username string `json:"username"`
-// 	Email    string `json:"email"`
-// 	Password string `json:"password"`
-// }
-
-// // Users struct
-// type Users struct {
-// 	Users []User `json:"users"`
-// }
-
-// Blog Struct
-type Blog struct {
-	ID string `json:"id"`
-	// Author      *Author `json:"author"`
-	Author      string `json:"author"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-}
-
-// Blogs struct
-type Blogs struct {
-	Blogs []Blog `json:"blogs"`
-}
-
-// Author struct
-// type Author struct {
-// 	Username  string `json:"username"`
-// 	Firstname string `json:"firstname"`
-// 	Lastname  string `json:"lastname"`
-// }
-
 //============================DATABASE====================================
 // Database instance
-var db *sql.DB
+// var db *sql.DB
+var db *gorm.DB
 
 // Connect to db function
 func Connect() error {
@@ -60,25 +29,30 @@ func Connect() error {
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASS")
 	dbname := os.Getenv("DB_NAME")
-
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=America/New_York", host, port, user, password, dbname)
 	var err error
-	db, err = sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname))
-	if err != nil {
-		return err
-	}
-	if err = db.Ping(); err != nil {
-		return err
-	}
-	return nil
-}
-func helloWorld(c *fiber.Ctx) error {
-	return c.SendString("Hello World")
-}
+	// ==============without gorm setup===================
+	// db, err = sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname))
+	// if err != nil {
+	// 	return err
+	// }
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 
-//============================Setup Routes====================================
-func setupRoutes(app *fiber.App) {
-	api := app.Group("/api")
-	api.Get("/", helloWorld)
+	if err != nil {
+		log.Fatal("Failed to connect to db \n", err)
+		os.Exit(2)
+		//======without gorm setup===========
+		// return err
+	}
+	// ==============without gorm setup===============
+	// if err = db.Ping(); err != nil {
+	// 	return err
+	// }
+	// return nil
+	log.Println("connected")
+	return nil
 }
 
 //============================MAIN====================================
@@ -97,11 +71,12 @@ func main() {
 	app := fiber.New()
 	app.Use(cors.New())
 
-	setupRoutes(app)
+	router.SetupRoutes(app)
+
 	// 404 Handler
 	app.Use(func(c *fiber.Ctx) error {
-	   return c.SendStatus(404) // => 404 "Not Found"
-   })
+		return c.SendStatus(404) // => 404 "Not Found"
+	})
 	// app.Use(logger.New())
 
 	// app.Get("/blog", func(c *fiber.Ctx) error {
