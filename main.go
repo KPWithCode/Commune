@@ -57,6 +57,7 @@ func Connect() error {
 
 //============================MAIN====================================
 
+
 func main() {
 	// load env
 	envErr := godotenv.Load(".env")
